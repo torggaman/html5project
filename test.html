@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Viewport</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" media="(max-width: 768px)" href="css/ipad.css">
+  <link rel="stylesheet" media="(min-width: 769px)" href="css/large.css">
+  <link rel="stylesheet" media="(max-width: 768px)" href="css/base.css">
+  <style>
+  *{box-sizing: border-box;}
+    body{
+      font-family: Verdana, sans-serif;
+      text-decoration: none;
+      color: #ffffff;
+      background: #444441;
+      font-size: 2em;
+      text-align: center;
+      width: 100%;
+    }
+    ul li{padding: 4px}
+    .container{
+      padding: 10px;
+      clear: both;
+    }
+    .button{
+      background: #2a2a2a;
+      padding: 18px;
+      margin: 20px;
+      display: block;
+    }
+    .places:first-of-type{margin-left: 0;}
+    .places:last-of-type{margin-right: 0;}
+
+    @media (max-width: 900px) {
+      .places{
+        width: 100%;
+        float: none;
+        margin: 2px auto 2px auto;
+      }
+      .place:first-of-type{
+        margin-top: 0px;
+      }
+      .places:last-of-type{
+        margin-bottom: 0px
+      }
+    }
+    #map{width:500px; height:500px;}
+    img{
+      width: 400px;
+      height: 300px;
+    }
+  </style>
+</head>
+<body>
+  <script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyAo8dhWiBncHgu2Bzamm36-qVPa2QXSwlU">
+  </script>
+  <h1>Viewport</h1>
+  <a id="btn1" href="#">Click</a>
+  <a id="btn2" class="button" href="#"> Click this one</a>
+<br>
+  <div id="map"></div>
+<button id="capture"> Click to capture image </button>
+<button id="stop"> Stop stream</button>
+<h2>Video</h2>
+<video width="400" height="300" id="video" autoplay></video>
+<canvas width="400" height="300" id="canvas"></canvas>
+<h2>Image</h2>
+<div id="images"></div>
+
+<div id="content"></div>
+
+  <script src="js/jquery-3.1.0.min.js">
+  </script>
+  <script>
+  $(document).ready(function(){
+
+    $.getJSON("data/data.json").done(function(data){
+
+      localStorage.setItem("data", JSON.stringify(data));
+
+      $.each(data.names, function(index, value){
+        $("#content").prepend("<p>First Name: " + value.first + ", Last Name: " + value.last + "</p>");
+      });
+    }).fail(function(){
+      if(localStorage.length != 0){
+        var localData = $.parseJSON(localStorage.getItem("data"));
+
+        $.each(localData.names, function(index, value){
+          $("#content").prepend("<p>First Name: " + value.first + ", Last Name: " + value.last + "</p>");
+        });
+      }
+    });
+
+
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
+    var video = document.getElementById("video");
+    var context = document.getElementById("canvas").getContext("2d");
+    var videostream = null;
+
+    navigator.getUserMedia(
+      {video: true},
+      function(stream){
+        videostream = stream;
+        var url = window.URL.createObjectURL(stream);
+        video.src = url;
+      },
+
+      function(err){
+        console.log(err.name);
+      }
+    );
+
+    $("#capture").on('click', function(){
+      context.drawImage(video, 0, 0, video.width, video.height);
+      var base64 = canvas.toDataURL("image/png");
+
+      $("#images").append(
+        "<a href='" + base64 + "' download='image (" + new Date($.now()) + ")'><image src='" + base64 + "'></a>"
+      ).show();
+    });
+
+    $("#stop").on('click', function(){
+      video.pause();
+      video.src = "";
+      videostream.stop();
+      $("#canvas").hide();
+    });
+
+    navigator.geolocation.getCurrentPosition(function(position){
+      $("#map").text("Latitude: " + position.coords.latitude +
+      ", Longitude: " + position.coords.longitude);
+
+      console.log(position.coords.accuracy);
+
+      console.log(position.coords.latitude);
+      var options = {
+        zoom: 18,
+        mapTypeId: google.maps.MapTypeId.SATELLITE,
+        center: new google.maps.LatLng(position.coords.latitude,
+          position.coords.longitude)
+      };
+      var map = new google.maps.Map(document.getElementById("map"), options);
+
+      map.setTilt(45);
+    });
+
+    $("#btn1").on('click', function(e){
+      e.preventDefault();
+      console.log("Btn1 Clicked");
+    });
+
+      $("#btn2").on('click', function(e){
+        e.preventDefault();
+        console.log("Btn2 Clicked");
+      });
+  });
+  /*
+  localStorage.setItem("Name", "Darren");
+  localStorage.setItem("Job", "QA Engineer");
+  localStorage.setItem("Address","123 55th Ave NE");
+  localStorage.setItem("Phone", "555-555-5555");
+
+  console.log(localStorage.getItem("Address"));
+
+  //localStorage.removeItem("Address");
+
+  console.log(localStorage.getItem("Address"));
+
+  console.log(localStorage.key(0) + ":" + localStorage.getItem("Address"));
+
+console.log(localStorage.length);
+
+  localStorage.clear();
+
+console.log(localStorage.getItem("Address"));
+console.log(localStorage.getItem("Job"));
+console.log(localStorage.getItem("Name"));
+console.log(localStorage.getItem("Phone"));
+
+console.log(localStorage.length);
+*/
+  </script>
+</body>
+</html>
